@@ -46,7 +46,7 @@ userSchema.methods.userJSON = function (token){
   return{
     name: this.name,
     email: this.email,
-    token: this.token
+    token: token
   };
 };
 
