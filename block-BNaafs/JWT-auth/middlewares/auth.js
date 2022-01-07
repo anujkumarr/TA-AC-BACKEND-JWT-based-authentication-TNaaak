@@ -7,7 +7,7 @@ module.exports = {
       if(token) {
         var payload = await jwt.verify(token, process.env.SECRET);
         req.user = payload;
-        next();
+        return next();
       } else {
         res.status(400).json({ error: 'Token is required' });
       }
