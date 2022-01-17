@@ -1,28 +1,27 @@
-var bcrypt = require("bcrypt");
-var jwt = require("jsonwebtoken");
-var mongoose = require("mongoose");
-const { stringify } = require("nodemon/lib/utils");
+var bcrypt = require('bcrypt');
+var jwt = require('jsonwebtoken');
+var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var userSchema = new Schema({
-  name: { type: String, required: true },
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  bio: { type: String },
-  avatar: { type: String },
-  following: { type: Boolean },
-  followingList: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  followersList: [{ type: Schema.Types.ObjectId, ref: 'User' }]
-},
+var userSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    bio: { type: String },
+    avatar: { type: String },
+    following: { type: Boolean },
+    followingList: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    followersList: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  },
   { timestamps: true }
 );
 
-// hashing the password
-
+// Hashing the password
 userSchema.pre('save', async function (next) {
   try {
-    if (this.password && this.password.isModified('password')) {
+    if (this.password && this.isModified('password')) {
       this.password = await bcrypt.hash(this.password, 10);
     }
     return next();
@@ -31,8 +30,7 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-// verification of password
-
+//Method for verification of Password
 userSchema.methods.verifyPassword = async function (password) {
   try {
     let result = await bcrypt.compare(password, this.password);
