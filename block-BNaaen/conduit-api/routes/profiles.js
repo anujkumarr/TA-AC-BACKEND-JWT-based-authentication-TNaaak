@@ -1,11 +1,10 @@
-var express = require("express");
+var express = require('express');
 var router = express.Router();
-var User = require("../models/User");
-var auth = require("../middlewares/auth");
+var User = require('../models/User');
+var auth = require('../middlewares/auth');
 
-// get profile
-
-router.get("/:username", async (req, res, next) => {
+//Get Profile (Optional Authentication)
+router.get('/:username', auth.authorizeOptional, async (req, res, next) => {
   var id = req.user.userId;
   var username = req.params.username;
   try {
@@ -13,33 +12,46 @@ router.get("/:username", async (req, res, next) => {
     if (user) {
       return res.status(201).json({ profile: user.displayUser(id) });
     } else {
-      return res.status(400).json({ error: "Such user is not exists" })
+      return res.status(400).json({ error: 'No such user exists' });
     }
   } catch (error) {
     next(error);
   }
 });
 
+// Protecting The Routes
+router.use(auth.verifyToken);
 
-// follow user
-
-router.post("/:username/follow", auth.verifyToken, async (req, res, next) => {
+//Follow User (Authenticated)
+router.post('/:username/follow', async (req, res, next) => {
   var id = req.user.userId;
   var username = req.params.username;
-
   try {
-    var fisrtUser = await User.findOne({ username });
-    if (!fisrtUser) {
+    var user1 = await User.findOne({ username });
+    if (!user1) {
       return res.status(400).json({ error: 'No such user exists' });
     }
 
-    var secondUser = await User.findById(id);
-    if (fisrtUser.username !== secondUser.username && !secondUser.followingList.includes(fisrtUser.id)) {
-      secondUser = await User.findByIdAndUpdate(secondUser.id, { $push: { followingList: fisrtUser.id } }, { new: true });
-      fisrtUser = await User.findByIdAndUpdate(fisrtUser.id, { $push: { followersList: secondUser.id } }, {
-        new: true
-      });
-      return res.status(201).json({ user: fisrtUser.displayUser(secondUser.id) });
+    var user2 = await User.findById(id);
+    if (
+      user1.username !== user2.username &&
+      !user2.followingList.includes(user1.id)
+    ) {
+      user2 = await User.findByIdAndUpdate(
+        user2.id,
+        {
+          $push: { followingList: user1.id },
+        },
+        { new: true }
+      );
+      user1 = await User.findByIdAndUpdate(
+        user1.id,
+        {
+          $push: { followersList: user2.id },
+        },
+        { new: true }
+      );
+      return res.status(201).json({ user: user1.displayUser(user2.id) });
     } else {
       return res
         .status(400)
@@ -50,38 +62,39 @@ router.post("/:username/follow", auth.verifyToken, async (req, res, next) => {
   }
 });
 
-// unfollow user
-
-router.delete("/:username/follow", auth.verifyToken, async (req, res, next) => {
+//Unfollow User (Authenticated)
+router.delete('/:username/follow', async (req, res, next) => {
   var username = req.params.username;
   try {
-    var fisrtUser = await User.findOne({ username });
-    if (!fisrtUser) {
+    var user1 = await User.findOne({ username });
+    if (!user1) {
       return res.status(400).json({ errors: 'No such user exists' });
     }
-    var secondUser = await User.findById(req.user.userId);
-    if (secondUser.followingList.includes(fisrtUser.id)) {
-      secondUser = await User.findByIdAndUpdate(secondUser.id, { $pull: { followingList: fisrtUser.id } }, { new: true });
-      fisrtUser = await User.findByIdAndUpdate(
-        fisrtUser.id,
+    var user2 = await User.findById(req.user.userId);
+    if (user2.followingList.includes(user1.id)) {
+      user2 = await User.findByIdAndUpdate(
+        user2.id,
         {
-          $pull: { followersList: secondUser.id },
+          $pull: { followingList: user1.id },
         },
         { new: true }
       );
-      return res.status(200).json({ user: fisrtUser.displayUser(secondUser.id) });
+      user1 = await User.findByIdAndUpdate(
+        user1.id,
+        {
+          $pull: { followersList: user2.id },
+        },
+        { new: true }
+      );
+      return res.status(200).json({ user: user1.displayUser(user2.id) });
     } else {
       return res
         .status(400)
         .json({ errors: { body: 'You are not following this person' } });
     }
   } catch (error) {
-    return next(error);
+    next(error);
   }
 });
 
 module.exports = router;
-
-
-
-

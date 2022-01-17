@@ -1,27 +1,31 @@
 var express = require('express');
 var router = express.Router();
-var User = require("../models/User");
-var auth = require("../middlewares/auth");
+var User = require('../models/User');
+var auth = require('../middlewares/auth');
+var bcrypt = require('bcrypt');
 
+// Protecting The Routes
+router.use(auth.verifyToken);
 
-router.get('/', auth.verifyToken, async (req, res, next) => {
+//Get Current User (Authenticated)
+router.get('/', async (req, res, next) => {
   let id = req.user.userId;
   try {
     let user = await User.findById(id);
-   return res.status(200).json({ user: user.displayUser(id) });
+    res.status(200).json({ user: user.displayUser(id) });
   } catch (error) {
-   return next(error);
+    next(error);
   }
 });
 
-router.put("/", auth.verifyToken, async (req, res, next) => {
+//Update User (Authenticated)
+router.put('/', async (req, res, next) => {
   let id = req.user.userId;
   try {
-   let user = await User.findByIdAndUpdate(id, req.body.user, { new: true });
-    return res.status(200).json({ user: user.displayUser(id) });
+    user = await User.findByIdAndUpdate(id, req.body.user, { new: true });
+    return res.status(201).json({ user: user.displayUser(id) });
   } catch (error) {
-    return next(error);
+    next(error);
   }
 });
-
 module.exports = router;

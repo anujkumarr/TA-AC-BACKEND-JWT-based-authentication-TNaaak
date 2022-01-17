@@ -1,9 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.status(200).json({ title: 'Welcome to the Conduit-API'});
+router.get('/', (req, res, next) => {
+  res.status(200).json({ message: 'Welcome to Conduit API...!' });
 });
 
 module.exports = router;
