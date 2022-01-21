@@ -24,6 +24,7 @@ module.exports = {
         req.user = payload;
         return next();
       } else {
+        req.user = null;
         return next();
       }
     } catch (error) {

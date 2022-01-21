@@ -14,6 +14,7 @@ router.post('/signup', async (req, res, next) => {
       .status(200)
       .json({ name: user.name, message: 'registered successfully' });
   } catch (error) {
+    console.log(error);
     if (error) {
       if (error.code === 11000) {
         return res

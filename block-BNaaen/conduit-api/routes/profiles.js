@@ -5,7 +5,8 @@ var auth = require('../middlewares/auth');
 
 //Get Profile (Optional Authentication)
 router.get('/:username', auth.authorizeOptional, async (req, res, next) => {
-  var id = req.user.userId;
+  var id = req.user ? req.user.userId : null;
+
   var username = req.params.username;
   try {
     var user = await User.findOne({ username: username });
